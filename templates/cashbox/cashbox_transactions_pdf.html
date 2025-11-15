@@ -1,0 +1,65 @@
+<!doctype html>
+{% load i18n %}
+<html {% if is_rtl %}dir="rtl"{% endif %} lang="{{ LANGUAGE_CODE|default:'en' }}">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @page { size: A4; margin: 20mm; }
+      body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 12px; }
+      .rtl { direction: rtl; unicode-bidi: embed; }
+      h1 { font-size: 18px; margin: 0 0 8px 0; }
+      p { margin: 0 0 10px 0; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { border: 1px solid #333; padding: 6px; vertical-align: top; text-align: left; }
+      body.rtl th, body.rtl td { text-align: right; }
+      .muted { color: #777; }
+      .num { text-align: right; }
+      .center { text-align: center; }
+      /* Column widths: make Note significantly wider to fit ~10 words */
+      .w-id { width: 4%; }
+      .w-date { width: 8%; }
+      .w-dir { width: 6%; }
+      .w-amt { width: 8%; }
+      .w-note { width: 74%; }
+      /* Ensure long notes wrap nicely in PDFs */
+      .note-cell { word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word; }
+    </style>
+  </head>
+  <body class="{% if is_rtl %}rtl{% endif %}">
+    <h1>{% trans "Transactions for Cash Box" %}</h1>
+    <p>
+      <strong>{% trans "Customer" %}:</strong> {{ customer.name }}<br>
+      <strong>{% trans "Cash Box" %}:</strong>
+      {% if cashbox.name %}
+        {{ cashbox.name }}
+      {% else %}
+        {{ cashbox.currency.code }} - {{ cashbox.account_type.code }}
+      {% endif %}
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th class="w-id center">#</th>
+          <th class="w-date">{% trans "Date" %}</th>
+          <th class="w-dir">{% trans "Direction" %}</th>
+          <th class="w-amt num">{% trans "Amount" %}</th>
+          <th class="w-note">{% trans "Note" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in transactions %}
+        <tr>
+          <td class="center">{{ forloop.counter }}</td>
+          <td>{{ t.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ t.get_direction_display }}</td>
+          <td class="num">{% if t.direction == 'WITHDRAW' %}-{% endif %}{{ t.amount }}</td>
+          <td class="note-cell">{{ t.note }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="muted">{% trans "No transactions found." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+  </html>

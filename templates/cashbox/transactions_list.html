@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load i18n humanize %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1>{{ title }}</h1>
+  <div class="btn-group">
+    {% if scope == 'cashbox' %}
+      <a class="btn btn-outline-dark" href="{% url 'cashbox_transactions_pdf' cashbox.id %}">{% trans "Export PDF" %}</a>
+    {% endif %}
+    {% if scope == 'cashbox' %}
+      <a class="btn btn-secondary" href="{% url 'customer_report' cashbox.customer.pk %}">{% trans "Back to Customer" %}</a>
+    {% elif scope == 'customer' %}
+      <a class="btn btn-secondary" href="{% url 'customer_report' customer.pk %}">{% trans "Back to Customer" %}</a>
+    {% else %}
+      <a class="btn btn-secondary" href="{% url 'dashboard' %}">{% trans "Back to Dashboard" %}</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-striped" style="table-layout: fixed;">
+    <colgroup>
+      <col style="width:4%">   {# # #}
+      <col style="width:10%">  {# Date smaller #}
+      <col style="width:8%">   {# Customer #}
+      <col style="width:10%">  {# Cash Box #}
+      <col style="width:5%">   {# Currency #}
+      <col style="width:5%">   {# Account Type #}
+      <col style="width:4%">   {# Direction #}
+      <col style="width:4%">   {# Amount #}
+      <col style="width:50%">  {# Note much wider (>= ~10 words) #}
+    </colgroup>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>{% trans "Date" %}</th>
+        <th>{% trans "Customer" %}</th>
+        <th>{% trans "Cash Box" %}</th>
+        <th>{% trans "Currency" %}</th>
+        <th>{% trans "Account Type" %}</th>
+        <th>{% trans "Direction" %}</th>
+        <th class="text-end">{% trans "Amount" %}</th>
+        <th>{% trans "Note" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in object_list %}
+      <tr>
+        <td>{{ forloop.counter0|add:page_obj.start_index|default:forloop.counter }}</td>
+        <td>{{ t.created_at|date:"Y-m-d H:i" }}</td>
+        <td>{{ t.cashbox.customer.name }}</td>
+        <td>
+          {% if t.cashbox.name %}
+            {{ t.cashbox.name }}
+          {% else %}
+            {{ t.cashbox.currency.code }} - {{ t.cashbox.account_type.code }}
+          {% endif %}
+        </td>
+        <td>{{ t.cashbox.currency.code }}</td>
+        <td>{{ t.cashbox.account_type.code }}</td>
+        <td>{{ t.get_direction_display }}</td>
+        <td class="text-end">
+          {% if t.direction == 'WITHDRAW' %}-{% endif %}{{ t.amount }}
+        </td>
+        <td style="word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word;">{{ t.note }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" class="text-center text-muted">{% trans "No transactions found." %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+<nav>
+  <ul class="pagination">
+    {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">{% trans "Previous" %}</span></li>
+    {% endif %}
+    <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">{% trans "Next" %}</span></li>
+    {% endif %}
+  </ul>
+  </nav>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1>{% trans "Dashboard" %}</h1>
+  <div>
+    <a class="btn btn-primary" href="{% url 'customer_list' %}">{% trans "Customers" %}</a>
+    <a class="btn btn-outline-secondary" href="{% url 'customer_create' %}">{% trans "Add Customer" %}</a>
+    <a class="btn btn-outline-dark" href="{% url 'transaction_review' %}">{% trans "Transactions Review" %}</a>
+  </div>
+  </div>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card text-bg-light">
+      <div class="card-body">
+        <h5 class="card-title">{% trans "Clients" %}</h5>
+        <p class="display-6 mb-0">{{ customers_count }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-bg-light">
+      <div class="card-body">
+        <h5 class="card-title">{% trans "Transactions" %}</h5>
+        <p class="display-6 mb-0">{{ transactions_count }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-bg-light">
+      <div class="card-body">
+        <h5 class="card-title">{% trans "Cash Boxes" %}</h5>
+        <p class="display-6 mb-0">{{ cashboxes_count }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-md-6">
+    <div class="card text-bg-light">
+      <div class="card-body">
+        <h5 class="card-title">{% trans "Currencies" %}</h5>
+        <p class="display-6 mb-0">{{ currencies_count }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card text-bg-light">
+      <div class="card-body">
+        <h5 class="card-title">{% trans "Account Types" %}</h5>
+        <p class="display-6 mb-0">{{ account_types_count }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

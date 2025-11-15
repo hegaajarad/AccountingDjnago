@@ -1,0 +1,69 @@
+<!doctype html>
+<html {% if is_rtl %}dir="rtl"{% endif %} lang="{{ LANGUAGE_CODE|default:'en' }}">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @page { size: A4; margin: 20mm; }
+      body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 12px; }
+      .rtl { direction: rtl; unicode-bidi: embed; }
+      h1 { font-size: 18px; margin: 0 0 8px 0; }
+      h3 { margin: 14px 0 6px 0; }
+      p { margin: 0 0 8px 0; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { border: 1px solid #333; padding: 6px; text-align: left; vertical-align: top; }
+      body.rtl th, body.rtl td { text-align: right; }
+      .muted { color: #777; }
+    </style>
+  </head>
+  <body class="{% if is_rtl %}rtl{% endif %}">
+    <h1>Customer Report: {{ customer.name }}</h1>
+    <p>Phone: {{ customer.phone }}</p>
+
+    <h3>Per-Currency Balances</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Currency</th>
+          <th>Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for code, bal in per_currency.items %}
+        <tr>
+          <td>{{ code }}</td>
+          <td>{{ bal }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="2" class="muted">No transactions yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3>Cash Boxes</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Currency</th>
+          <th>Account Type</th>
+          <th>Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cb in cashboxes %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ cb.name|default_if_none:""|default:"—" }}</td>
+          <td>{{ cb.currency.code }}</td>
+          <td>{{ cb.account_type.code }}</td>
+          <td>{{ cb.balance }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="muted">No cash boxes yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </body>
+  </html>
