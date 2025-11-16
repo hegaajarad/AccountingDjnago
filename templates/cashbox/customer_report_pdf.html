@@ -1,10 +1,11 @@
 <!doctype html>
+{% load arabic %}
 <html {% if is_rtl %}dir="rtl"{% endif %} lang="{{ LANGUAGE_CODE|default:'en' }}">
   <head>
     <meta charset="utf-8">
     <style>
       @page { size: A4; margin: 20mm; }
-      body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 12px; }
+      body { font-family: "{{ pdf_font_family|default:'DejaVu Sans' }}", "DejaVu Sans", Arial, sans-serif; font-size: 12px; }
       .rtl { direction: rtl; unicode-bidi: embed; }
       h1 { font-size: 18px; margin: 0 0 8px 0; }
       h3 { margin: 14px 0 6px 0; }
@@ -16,8 +17,8 @@
     </style>
   </head>
   <body class="{% if is_rtl %}rtl{% endif %}">
-    <h1>Customer Report: {{ customer.name }}</h1>
-    <p>Phone: {{ customer.phone }}</p>
+    <h1>Customer Report: {{ customer.name|arabic }}</h1>
+    <p>Phone: {{ customer.phone|arabic }}</p>
 
     <h3>Per-Currency Balances</h3>
     <table>
@@ -54,9 +55,9 @@
         {% for cb in cashboxes %}
         <tr>
           <td>{{ forloop.counter }}</td>
-          <td>{{ cb.name|default_if_none:""|default:"—" }}</td>
+          <td>{{ cb.name|arabic|default_if_none:""|default:"—" }}</td>
           <td>{{ cb.currency.code }}</td>
-          <td>{{ cb.account_type.code }}</td>
+          <td>{{ cb.account_type.code|arabic }}</td>
           <td>{{ cb.balance }}</td>
         </tr>
         {% empty %}

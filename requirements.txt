@@ -1,2 +1,5 @@
 Django==5.1
 xhtml2pdf==0.2.15
+reportlab>=3.6
+arabic-reshaper>=3.0
+python-bidi>=0.4

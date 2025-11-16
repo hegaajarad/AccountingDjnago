@@ -7,6 +7,8 @@ from .views import (
     customer_report_pdf,
     CashBoxCreateView,
     TransactionCreateView,
+    TransactionSuccessView,
+    transaction_search,
     CustomerTransactionsView,
     CashBoxTransactionsView,
     TransactionReviewListView,
@@ -24,5 +26,7 @@ urlpatterns = [
     path("cashboxes/<int:pk>/transactions/", CashBoxTransactionsView.as_view(), name="cashbox_transactions"),
     path("cashboxes/<int:pk>/transactions/pdf/", cashbox_transactions_pdf, name="cashbox_transactions_pdf"),
     path("transactions/new/", TransactionCreateView.as_view(), name="transaction_create"),
+    path("transactions/<int:pk>/success/", TransactionSuccessView.as_view(), name="transaction_success"),
+    path("transactions/search/", transaction_search, name="transaction_search"),
     path("transactions/", TransactionReviewListView.as_view(), name="transaction_review"),
 ]

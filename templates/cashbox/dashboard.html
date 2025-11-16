@@ -1,14 +1,27 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1>{% trans "Dashboard" %}</h1>
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h1 class="mb-0">{% trans "Dashboard" %}</h1>
+  <form action="{% url 'transaction_search' %}" method="get" class="d-flex" role="search">
+    <div class="input-group">
+      <span class="input-group-text">#</span>
+      <input name="q" type="text" inputmode="numeric" class="form-control" placeholder="{% trans 'Search by Transaction ID (e.g. 000123)' %}" aria-label="{% trans 'Transaction ID' %}">
+      <button class="btn btn-primary" type="submit">{% trans "Search" %}</button>
+    </div>
+  </form>
   <div>
     <a class="btn btn-primary" href="{% url 'customer_list' %}">{% trans "Customers" %}</a>
     <a class="btn btn-outline-secondary" href="{% url 'customer_create' %}">{% trans "Add Customer" %}</a>
     <a class="btn btn-outline-dark" href="{% url 'transaction_review' %}">{% trans "Transactions Review" %}</a>
   </div>
   </div>
+
+{% if request.GET.tx_not_found %}
+  <div class="alert alert-warning" role="alert">
+    {% trans "Transaction not found. Please check the ID and try again." %}
+  </div>
+{% endif %}
 
 <div class="row g-3">
   <div class="col-md-4">

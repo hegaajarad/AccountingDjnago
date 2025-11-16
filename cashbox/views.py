@@ -1,7 +1,9 @@
 from decimal import Decimal
 from django.views.generic import DetailView, ListView, CreateView, TemplateView
-from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
+from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse_lazy, reverse
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Sum, Case, When, F, DecimalField
 
@@ -10,20 +12,21 @@ from .forms import CashBoxForm, TransactionForm
 from .pdf import render_to_pdf
 
 
-class CustomerListView(ListView):
+class CustomerListView(LoginRequiredMixin, ListView):
     model = Customer
     paginate_by = 20
     template_name = "cashbox/customer_list.html"
 
 
-class CustomerCreateView(CreateView):
+class CustomerCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    permission_required = "cashbox.add_customer"
     model = Customer
     fields = ["name", "phone"]
     template_name = "cashbox/customer_form.html"
     success_url = reverse_lazy("customer_list")
 
 
-class CustomerReportView(DetailView):
+class CustomerReportView(LoginRequiredMixin, DetailView):
     model = Customer
     template_name = "cashbox/customer_report.html"
 
@@ -64,6 +67,7 @@ class CustomerReportView(DetailView):
         return ctx
 
 
+@login_required
 def customer_report_pdf(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     view = CustomerReportView()
@@ -73,6 +77,7 @@ def customer_report_pdf(request, pk):
     return render_to_pdf("cashbox/customer_report_pdf.html", context, filename=f"customer_{customer.id}.pdf")
 
 
+@login_required
 def cashbox_transactions_pdf(request, pk):
     """Export full transaction report for a specific cash box as PDF."""
     cashbox = get_object_or_404(
@@ -113,7 +118,8 @@ def cashbox_transactions_pdf(request, pk):
     return render_to_pdf("cashbox/cashbox_transactions_pdf.html", context, filename=filename)
 
 
-class CashBoxCreateView(CreateView):
+class CashBoxCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    permission_required = "cashbox.add_cashbox"
     model = CashBox
     form_class = CashBoxForm
     template_name = "cashbox/cashbox_form.html"
@@ -123,7 +129,8 @@ class CashBoxCreateView(CreateView):
         return reverse_lazy("customer_report", kwargs={"pk": self.object.customer.pk})
 
 
-class TransactionCreateView(CreateView):
+class TransactionCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    permission_required = "cashbox.add_transaction"
     model = Transaction
     form_class = TransactionForm
     template_name = "cashbox/transaction_form.html"
@@ -136,14 +143,17 @@ class TransactionCreateView(CreateView):
         return initial
 
     def get_success_url(self):
-        # redirect to customer report
-        return reverse_lazy(
-            "customer_report", kwargs={"pk": self.object.cashbox.customer.pk}
-        )
+        # After creating a transaction, show a small success/summary page
+        return reverse_lazy("transaction_success", kwargs={"pk": self.object.pk})
+
+
+class TransactionSuccessView(LoginRequiredMixin, DetailView):
+    model = Transaction
+    template_name = "cashbox/transaction_success.html"
 
 
 
-class DashboardView(TemplateView):
+class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "cashbox/dashboard.html"
 
     def get_context_data(self, **kwargs):
@@ -168,7 +178,39 @@ class DashboardView(TemplateView):
         return Model.objects.count()
 
 
-class CustomerTransactionsView(ListView):
+@login_required
+def transaction_search(request):
+    """Search by Transaction ID and redirect to its info page.
+
+    Accepts numeric IDs with or without leading zeros (e.g., 000123 or 123).
+    If the transaction doesn't exist or the input is invalid, redirect back to
+    the dashboard with a small flag to show an error message.
+    """
+    q = (request.GET.get("q") or "").strip()
+    if not q:
+        return redirect("dashboard")
+
+    # Extract digits to allow inputs like "#000123" or "TX-000123"
+    import re
+
+    m = re.search(r"(\d+)", q)
+    if not m:
+        return redirect(f"{reverse('dashboard')}?tx_not_found=1")
+
+    try:
+        pk = int(m.group(1))
+    except Exception:
+        return redirect(f"{reverse('dashboard')}?tx_not_found=1")
+
+    try:
+        Transaction.objects.get(pk=pk)
+    except Transaction.DoesNotExist:
+        return redirect(f"{reverse('dashboard')}?tx_not_found=1")
+
+    return redirect("transaction_success", pk=pk)
+
+
+class CustomerTransactionsView(LoginRequiredMixin, ListView):
     model = Transaction
     paginate_by = 50
     template_name = "cashbox/transactions_list.html"
@@ -199,7 +241,7 @@ class CustomerTransactionsView(ListView):
         return ctx
 
 
-class CashBoxTransactionsView(ListView):
+class CashBoxTransactionsView(LoginRequiredMixin, ListView):
     model = Transaction
     paginate_by = 50
     template_name = "cashbox/transactions_list.html"
@@ -234,7 +276,7 @@ class CashBoxTransactionsView(ListView):
         return ctx
 
 
-class TransactionReviewListView(ListView):
+class TransactionReviewListView(LoginRequiredMixin, ListView):
     model = Transaction
     paginate_by = 50
     template_name = "cashbox/transactions_list.html"

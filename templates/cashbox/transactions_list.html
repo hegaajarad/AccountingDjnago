@@ -7,6 +7,13 @@
     {% if scope == 'cashbox' %}
       <a class="btn btn-outline-dark" href="{% url 'cashbox_transactions_pdf' cashbox.id %}">{% trans "Export PDF" %}</a>
     {% endif %}
+    {% if perms.cashbox.add_transaction %}
+      {% if scope == 'cashbox' %}
+        <a class="btn btn-primary" href="{% url 'transaction_create' %}?cashbox={{ cashbox.id }}">{% trans "Add Transaction" %}</a>
+      {% else %}
+        <a class="btn btn-primary" href="{% url 'transaction_create' %}">{% trans "Add Transaction" %}</a>
+      {% endif %}
+    {% endif %}
     {% if scope == 'cashbox' %}
       <a class="btn btn-secondary" href="{% url 'customer_report' cashbox.customer.pk %}">{% trans "Back to Customer" %}</a>
     {% elif scope == 'customer' %}
@@ -17,27 +24,35 @@
   </div>
 </div>
 
+{% if scope == 'cashbox' %}
+<div class="alert alert-info py-2 mb-3">
+  <strong>{% trans "Current Balance" %}:</strong>
+  {{ cashbox.balance }} {{ cashbox.currency.code }}
+</div>
+{% endif %}
+
 <div class="table-responsive">
   <table class="table table-striped" style="table-layout: fixed;">
     <colgroup>
-      <col style="width:4%">   {# # #}
-      <col style="width:10%">  {# Date smaller #}
-      <col style="width:8%">   {# Customer #}
-      <col style="width:10%">  {# Cash Box #}
-      <col style="width:5%">   {# Currency #}
-      <col style="width:5%">   {# Account Type #}
+      <!-- Standardized column widths for financial reports -->
+      <col style="width:6%">   {# # #}
+      <col style="width:12%">  {# Date #}
+      <col style="width:12%">  {# Customer #}
+      <col style="width:14%">  {# Cash Box #}
+      <col style="width:6%">   {# Currency #}
+      <col style="width:8%">   {# Account Type #}
       <col style="width:4%">   {# Direction #}
-      <col style="width:4%">   {# Amount #}
-      <col style="width:50%">  {# Note much wider (>= ~10 words) #}
+      <col style="width:12%">  {# Amount #}
+      <col style="width:26%">  {# Note #}
     </colgroup>
     <thead>
       <tr>
-        <th>#</th>
+        <th>{% trans "Transaction ID" %}</th>
         <th>{% trans "Date" %}</th>
         <th>{% trans "Customer" %}</th>
         <th>{% trans "Cash Box" %}</th>
         <th>{% trans "Currency" %}</th>
-        <th>{% trans "Account Type" %}</th>
+        <th>{% trans "Acc Type" %}</th>
         <th>{% trans "Direction" %}</th>
         <th class="text-end">{% trans "Amount" %}</th>
         <th>{% trans "Note" %}</th>
@@ -46,7 +61,7 @@
     <tbody>
       {% for t in object_list %}
       <tr>
-        <td>{{ forloop.counter0|add:page_obj.start_index|default:forloop.counter }}</td>
+        <td>{{ t.id|stringformat:"05d" }}</td>
         <td>{{ t.created_at|date:"Y-m-d H:i" }}</td>
         <td>{{ t.cashbox.customer.name }}</td>
         <td>

@@ -58,14 +58,4 @@ Notes
 - PDF rendering uses xhtml2pdf (pure Python); it should work on Windows without extra system packages.
 - For production, configure a proper SECRET_KEY, DEBUG=False, ALLOWED_HOSTS, and a production database (e.g., PostgreSQL).
 
-Troubleshooting
-- Error: "no such column: cashbox_cashbox.name"
-  - Cause: Your local SQLite database was created before we added the optional Cash Box "name" field and hasn’t been migrated yet.
-  - Fix: Apply migrations:
-    1) .venv\Scripts\activate
-    2) python manage.py migrate
-  - If you’re still seeing issues and you don’t need existing local data, you can reset the DB:
-    1) Close the server.
-    2) Delete db.sqlite3 and the cashbox/migrations/__pycache__ directory if present.
-    3) python manage.py migrate
-    4) python manage.py createsuperuser
+
