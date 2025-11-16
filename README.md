@@ -59,3 +59,26 @@ Notes
 - For production, configure a proper SECRET_KEY, DEBUG=False, ALLOWED_HOSTS, and a production database (e.g., PostgreSQL).
 
 
+Arabic in ReportLab PDFs (RTL + shaping)
+1) Install requirements (already listed in requirements.txt):
+   - pip install -r requirements.txt
+   This includes reportlab, arabic-reshaper, and python-bidi.
+
+2) Add an Arabic-capable TTF font to the project, for example Amiri:
+   - Download Amiri-Regular.ttf
+   - Place it at: static/fonts/Amiri-Regular.ttf
+
+3) Try the demo endpoint to verify Arabic shaping and right-to-left rendering:
+   - Start the server: python manage.py runserver
+   - Open: http://127.0.0.1:8000/en/pdf/test/ (or /ar/pdf/test/ if using Arabic locale)
+
+What the demo does
+- Registers the Amiri font with ReportLab
+- Shapes Arabic letters using arabic-reshaper
+- Reorders for right-to-left using python-bidi
+- Draws the text with the Arabic font on a PDF and downloads it as test.pdf
+
+Notes
+- If the font file is missing, the demo will fall back to a generic font and Arabic shaping may not display correctly. Ensure static/fonts/Amiri-Regular.ttf exists.
+
+

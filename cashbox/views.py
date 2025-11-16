@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMix
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
+from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Sum, Case, When, F, DecimalField
 
@@ -298,3 +299,61 @@ class TransactionReviewListView(LoginRequiredMixin, ListView):
         ctx = super().get_context_data(**kwargs)
         ctx.update({"scope": "all", "title": _("All Transactions")})
         return ctx
+
+
+# --- ReportLab Arabic PDF demo ---
+@login_required
+def generate_pdf(request):
+    """Generate a small PDF using ReportLab with proper Arabic shaping and RTL.
+
+    This registers an Arabic-capable TTF from static/fonts/Amiri-Regular.ttf
+    (you can replace with Cairo/Noto Naskh/Tajawal), reshapes the Arabic text
+    using arabic-reshaper and reorders it using python-bidi, then renders it
+    with ReportLab.
+    """
+    # Lazy imports to avoid forcing these deps during non-PDF views
+    from reportlab.pdfgen import canvas as rl_canvas
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    import arabic_reshaper
+    from bidi.algorithm import get_display
+
+    # 1) Register Arabic font (expects file at static/fonts/Amiri-Regular.ttf)
+    # Using relative path from project root where STATICFILES_DIRS points to "static"
+    font_name = "Amiri"
+    font_path = "static/fonts/Amiri-Regular.ttf"
+    try:
+        if font_name not in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFont(TTFont(font_name, font_path))
+        use_font = font_name
+    except Exception:
+        # Fallback to a safe font if registration fails (text may not shape)
+        use_font = "Helvetica"
+
+    # 2) Your Arabic text
+    text = "مرحباً بك في نظام بريميكس للحسابات"
+
+    # 3) Apply shaping and RTL reordering
+    reshaped = arabic_reshaper.reshape(text)
+    bidi_text = get_display(reshaped)
+
+    # 4) Build PDF response
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="test.pdf"'
+
+    c = rl_canvas.Canvas(response)
+
+    # 5) Draw text using the registered Arabic font, right-aligned
+    try:
+        c.setFont(use_font, 18)
+    except Exception:
+        # In the unlikely event font size setting fails, ignore
+        pass
+    # A4 width ~ 595 points; draw near the right edge with RTL-appropriate call
+    c.drawRightString(550, 800, bidi_text)
+
+    c.showPage()
+    c.save()
+
+    return response

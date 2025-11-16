@@ -13,6 +13,7 @@ from .views import (
     CashBoxTransactionsView,
     TransactionReviewListView,
     cashbox_transactions_pdf,
+    generate_pdf,
 )
 
 urlpatterns = [
@@ -29,4 +30,6 @@ urlpatterns = [
     path("transactions/<int:pk>/success/", TransactionSuccessView.as_view(), name="transaction_success"),
     path("transactions/search/", transaction_search, name="transaction_search"),
     path("transactions/", TransactionReviewListView.as_view(), name="transaction_review"),
+    # Small demo endpoint to verify ReportLab Arabic shaping/RTL support
+    path("pdf/test/", generate_pdf, name="arabic_pdf_test"),
 ]
